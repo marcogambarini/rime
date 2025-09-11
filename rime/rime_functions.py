@@ -157,7 +157,7 @@ def table_impacts_gwl(
     # New dataframe in IAMC wide format for all output data.
     idf = pd.DataFrame(columns=pyam.IAMC_IDX + years)
 
-    for indicator in list(dsi.dataset.data_vars):
+    for indicator in list(dsi.data_vars):
         # print(indicator)
 
         # For each indicator, new df
@@ -165,15 +165,15 @@ def table_impacts_gwl(
             columns=pyam.IAMC_IDX
         )  # dont have years because otherwise joins with empty rows
 
-        edf["region"] = dsi.dataset.region.values
+        edf["region"] = dsi.region.values
         edf["model"] = model
         edf["scenario"] = scenario
         edf["variable"] = f"{prefix_indicator}{indicator}"
         # try:
-        edf["unit"] = dsi.dataset[indicator].attrs["unit"]
+        edf["unit"] = dsi[indicator].unit
         # except(InvalidIndexError):
         #     edf['unit'] = dsi[indicator].unit
-        dsd = dsi.dataset.sel(ssp=ssp)[indicator]
+        dsd = dsi.sel(ssp=ssp)[indicator]
 
         tgt_y = xr.DataArray(years, dims="points")
         tgt_g = xr.DataArray(tt[years].values, dims="points")
@@ -695,7 +695,7 @@ def prepare_cumulative(
 
         # Compute the delayed computations and concatenate the results
         df_cumulative = dd.from_delayed(dask_dfs)
-        df_cumlative = df_cumlative.compute()
+        df_cumlative = df_cumulative.compute()
     else:
         df_cumlative = pd.concat(
             [calculate_cumulative(ts, first_year, year, variable) for year in years]

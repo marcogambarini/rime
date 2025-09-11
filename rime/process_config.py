@@ -26,7 +26,8 @@ git_path = f"C:\\Github\\"
 
 # From generate_aggregated_inputs.py
 
-region = "COUNTRIES"  # 'R10' or 'COUNTRIES'
+#region = "COUNTRIES"  # 'R10' or 'COUNTRIES'
+region = "R5"
 # region = "R10"
 table_output_format = f"table_output_|_{region}.csv"
 
@@ -37,7 +38,7 @@ yr_end = 2100
 
 # Dask settings
 num_workers = 24  # Number of workers. More workers creates more overhead
-parallel = True  # Uses Dask in processing the IAMC scenarios
+parallel = True # Uses Dask in processing the IAMC scenarios
 
 
 caution_checks = True
@@ -54,21 +55,24 @@ kg_class_path = git_path + "climate_impacts_processing\\kg_class.nc"
 
 if env == "pc":
     # Main working directory
-    wd = f"C:\\Users\\{user}\\IIASA\\ECE.prog - Documents\\Research Theme - NEXUS\\Hotspots_Explorer_2p0\\"
+    #wd = f"C:\\Users\\{user}\\IIASA\\ECE.prog - Documents\\Research Theme - NEXUS\\Hotspots_Explorer_2p0\\"
+    wd = "./"
     wd_input = f"P:\\watxene\\ISIMIP_postprocessed\\cse\\"  # Input data branch
     # Directory of table files to read as input
     wdtable_input = "table_output\\"
 
     # Output directory
-    wd2 = "rcre_testing\\testing_3\\"
+    wd2 = "reprod_outputs/"
     output_dir = f"{wd}{wd2}aggregated_region_datafiles\\"
 
     # Input source of processed climate data by ssp/year/variable/region
-    folder_input_climate = "aggregated_region_datafiles\\"
-    fname_input_climate = f"{wd}{wd2}{folder_input_climate}*_{region}*.nc"
+    #folder_input_climate = "aggregated_region_datafiles\\"
+    folder_input_climate = "/home/marco/cmcc/committed/rime-data/aggregated_inputs/"
+    fname_input_climate = f"{folder_input_climate}*_{region}*.nc"
 
     # Input IAMC scenarios file, must have a temperature variable
-    fname_input_scenarios = f"emissions_temp_AR6_small.xlsx"
+    #fname_input_scenarios = f"test_data/emissions_temp_AR6_small.xlsx"
+    fname_input_scenarios = f"test_data/true_input_scenarios.xlsx"
 
     # Directory of map files to read as input
     impact_data_dir = f"{wd}\\data\\4_split_files_for_geoserver"
@@ -88,8 +92,8 @@ temp_variable = (
 ssp_meta_col = "Ssp_family"  # meta column name of SSP assignment
 
 
-output_folder_tables = f"{wd}{wd2}output\\tables\\"
-output_folder_maps = f"{wd}{wd2}output\\maps\\"
+output_folder_tables = f"{wd}{wd2}output/tables/"
+output_folder_maps = f"{wd}{wd2}output/maps/"
 
 prefix_indicator = "Climate impacts|RIME|"
 

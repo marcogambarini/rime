@@ -7,6 +7,7 @@ Created on Sun Dec 11 00:24:36 2022
 if __name__ == "__main__":
     from rime.process_config import *
     from rime.rime_functions import *
+    from rime.utils import *
 
     #  from alive_progress import alive_bar
     import dask.dataframe as dd
@@ -21,14 +22,15 @@ if __name__ == "__main__":
     import time
     import xarray as xr
     import dask
+    import os 
 
     # from pandas import InvalidIndexError
     # dask.config.set(scheduler='threads')  # overwrite default with multiprocessing scheduler
 
     filesall = glob.glob(fname_input_climate)
 
-    # files = filesall
-    files = filesall[:2]
+    files = filesall
+    # files = filesall[:2]
     # files = filesall[2:6]
     # files = filesall[7:9] # problem in 6?
     # files = filesall[9:12]
@@ -41,7 +43,7 @@ if __name__ == "__main__":
     # load input IAMC scenarios file
     df_scens_in = pyam.IamDataFrame(fname_input_scenarios)
 
-    mode = "CO2"
+    mode = "GWL"
     if mode == "CO2":
         print(
             "CO2 mode: Global mean temperatures will be derived from response \
@@ -57,7 +59,7 @@ if __name__ == "__main__":
         dask.config.set(num_workers=num_workers)
         print(f'Number of Dask workers: {dask.config.get("num_workers")}')
         if env == "pc":
-            dask.config.set({"temporary-directory": "C:\\Temp"})
+            dask.config.set({"temporary-directory": "/tmp"})
         else:
             dask.config.set({"temporary-directory": f"D:\\{user}"})
         client = Client()
@@ -71,13 +73,16 @@ if __name__ == "__main__":
 
     for year_res in year_resols:
         for f in files:
+            print("opening ", f, "\n")
+
             start = time.time()
 
             # Get variable name for the filename output
             v1 = f.split(f"_{region}")[0]
-            v2 = v1.split("\\")[-1]
+            #v2 = v1.split("\\")[-1]
+            v2 = v1.split("/")[-1] # needed for UNIX
 
-            years = range(2015, 2101, year_res)
+            years = range(2020, 2101, year_res)
 
             #############################
             # CLIMATE DATA PRE-PROCESSING
@@ -134,6 +139,8 @@ if __name__ == "__main__":
             dft = dft.apply(fix_duplicate_temps, years=years, axis=1)
             dft.reset_index(inplace=True, drop=True)
 
+            dft = dft.merge(dfp.meta['Ssp_family'], on=['model', 'scenario'])
+
             ###########################
             # START PROCESSING
 
@@ -162,8 +169,12 @@ if __name__ == "__main__":
             expandedd = pd.concat([df_new[x] for x in df_new.index])
             print(f" Done:  {time.time()-start}")
 
-            filename = f"{wd}{wd2}{output_folder_tables}{input_scenarios_name}_RIME_output_{region}_{v2}_{year_res}yr{test}.csv"
-
-            # expandedd.to_csv(filename, encoding="utf-8", index=False)
+            filename = f"{output_folder_tables}{input_scenarios_name}_RIME_output_{region}_{v2}_{year_res}yr{test}.csv"
+            
+            try:
+                os.makedirs(output_folder_tables)
+            except FileExistsError:
+                pass
+            expandedd.to_csv(filename, encoding="utf-8", index=False)
             print(f" Saved: {region} yrs={year_res}\n  {time.time()-start}")
             print(f"{len(dsi.data_vars)} variables, {len(dfp.meta)} scenarios")
