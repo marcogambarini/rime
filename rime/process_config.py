@@ -27,8 +27,8 @@ git_path = f"C:\\Github\\"
 # From generate_aggregated_inputs.py
 
 #region = "COUNTRIES"  # 'R10' or 'COUNTRIES'
-region = "R5"
-# region = "R10"
+# region = "R5"
+region = "R10"
 table_output_format = f"table_output_|_{region}.csv"
 
 
@@ -72,7 +72,10 @@ if env == "pc":
 
     # Input IAMC scenarios file, must have a temperature variable
     #fname_input_scenarios = f"test_data/emissions_temp_AR6_small.xlsx"
-    fname_input_scenarios = f"test_data/true_input_scenarios.xlsx"
+    with open("/home/marco/cmcc/committed/committed-get-data/data/latest.txt", 'r') as f:
+        latest_filename = f.readlines()[0].rstrip()
+    # fname_input_scenarios = f"test_data/true_input_scenarios.xlsx"
+    fname_input_scenarios = f"/home/marco/cmcc/committed/committed-get-data/data/committed_scenarios_{latest_filename}_clean.csv"
 
     # Directory of map files to read as input
     impact_data_dir = f"{wd}\\data\\4_split_files_for_geoserver"
