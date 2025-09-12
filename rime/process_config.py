@@ -62,7 +62,7 @@ if env == "pc":
     wdtable_input = "table_output\\"
 
     # Output directory
-    wd2 = "reprod_outputs/"
+    wd2 = "committed_outputs/"
     output_dir = f"{wd}{wd2}aggregated_region_datafiles\\"
 
     # Input source of processed climate data by ssp/year/variable/region
@@ -95,8 +95,8 @@ temp_variable = (
 ssp_meta_col = "Ssp_family"  # meta column name of SSP assignment
 
 
-output_folder_tables = f"{wd}{wd2}output/tables/"
-output_folder_maps = f"{wd}{wd2}output/maps/"
+output_folder_tables = f"{wd}{wd2}"
+output_folder_maps = f"{wd}{wd2}"
 
 prefix_indicator = "Climate impacts|RIME|"
 
