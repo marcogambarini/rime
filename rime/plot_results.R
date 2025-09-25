@@ -49,7 +49,7 @@ indicator_name_map <- data.table(
                      )
 )
 
-for (f in list.files(result_folder)){
+for (f in setdiff(list.files(result_folder), "RIME-committed.csv")){
   filename <- paste0(result_folder, f)
   cat(filename, "\n")
   if (exists("rimedata")){
