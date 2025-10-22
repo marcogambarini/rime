@@ -4,6 +4,7 @@ library(data.table)
 library(stringr)
 library(stringi)
 library(ggplot2)
+library(nanoparquet)
 
 result_folder <- "committed_outputs/"
 
@@ -70,8 +71,66 @@ rimedata <- merge(rimedata, indicator_name_map)
 
 fwrite(rimedata, paste0(result_folder, "RIME-committed.csv"))
 
-ggplot(data=rimedata[region=="Countries of South Asia; primarily India"&indicator_name=="Drought intensity"&
-                       year==2060&variable=="Exposure|Population|%"&model=="IMAGE 3.3"]) + 
-  geom_col(mapping=aes(x=scenario, y=value)) + 
-  scale_x_discrete(guide = guide_axis(angle = 90)) + 
-  labs(y = "Drought intensity|Exposure|Population|%")
+# select values for a composite indicator
+# see Fig. SI 12 of Werning et al. 2024
+indicator_sel <- data.table(
+  indicator_name = c("Very heavy precipitation days",
+                     "Very wet days",
+                     "Consecutive dry days",
+                     "Drought intensity (Runoff)",
+                     "Seasonality", # TODO: CHECK supposed to be runoff
+                     "Inter-annual variability (Runoff)",
+                     "Water stress index",
+                     "Heatwave intensity", # TODO: CHECK supposed to be heatwave events
+                     "Heatwave intensity",
+                     "Tropical nights",
+                     "Cooling degree days (26C)"
+                    ),
+  spec = c(NA,
+           NA,
+           NA,
+           NA,
+           NA,
+           NA,
+           NA,
+           "95_7",
+           "99_3",
+           NA,
+           NA
+        ),
+  variable = "Hazard|Hazard score|Population weighted"
+)
+
+region_name_map <- data.table(
+  region = c("Countries of Latin America and the Caribbean",
+             "Countries of South Asia; primarily India",
+             "Countries of Sub-Saharan Africa",
+             "Countries of centrally-planned Asia; primarily China",
+             "Countries of the Middle East; Iran, Iraq, Israel, Saudi Arabia, Qatar, etc.",
+             "Eastern and Western Europe (i.e., the EU28)",
+             "North America; primarily the United States of America and Canada",
+             "Other countries of Asia",
+             "Pacific OECD",
+             "Reforming Economies of Eastern Europe and the Former Soviet Union; primarily Russia"
+             ),
+  r10_region = c("Latin America (R10)",
+                 "India+ (R10)",
+                 "Africa (R10)",
+                 "China+ (R10)",
+                 "Middle East (R10)",
+                 "Europe (R10)",
+                 "North America (R10)",
+                 "Rest of Asia (R10)",
+                 "Pacific OECD (R10)",
+                 "Reforming Economies (R10)"
+                  )
+)
+
+selected_indicators <- merge(rimedata, indicator_sel, by=c("indicator_name", "spec", "variable"))
+selected_indicators[!is.na(spec), indicator_name:=paste(indicator_name, spec)]
+selected_indicators <- merge(selected_indicators, region_name_map, by="region")
+selected_indicators[, region:=NULL]
+setnames(selected_indicators, "r10_region", "region")
+
+write_parquet(selected_indicators, "committed_outputs/RIME_hazard_scores.parquet")
+
