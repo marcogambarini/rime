@@ -50,7 +50,8 @@ indicator_name_map <- data.table(
                      )
 )
 
-for (f in setdiff(list.files(result_folder), "RIME-committed.csv")){
+for (f in setdiff(list.files(result_folder), c("RIME-committed.csv", 
+                                               "RIME_hazard_scores.parquet"))){
   filename <- paste0(result_folder, f)
   cat(filename, "\n")
   if (exists("rimedata")){
@@ -62,6 +63,7 @@ for (f in setdiff(list.files(result_folder), "RIME-committed.csv")){
 
 rimedata <- melt(rimedata, id.vars=c("model", "scenario", "region", "variable", "unit"),
                  variable.name="year", variable.factor=FALSE)
+rimedata$year <- as.numeric(rimedata$year)
 rimedata[, variable:=str_remove(variable, fixed("RIME|"))]
 #rimedata[, c("indicator", "variable") := tstrsplit(variable, "|")]
 rimedata[, c("indicator", "variable") := transpose(stri_split_fixed(variable, "|", n=2))]
