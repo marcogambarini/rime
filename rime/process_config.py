@@ -62,7 +62,7 @@ if env == "pc":
     wdtable_input = "table_output\\"
 
     # Output directory
-    wd2 = "committed_outputs/"
+    wd2 = "committed_outputs_CO2/"
     output_dir = f"{wd}{wd2}aggregated_region_datafiles\\"
 
     # Input source of processed climate data by ssp/year/variable/region
