@@ -62,7 +62,7 @@ if env == "pc":
     wdtable_input = "table_output\\"
 
     # Output directory
-    wd2 = "committed_outputs_CO2/"
+    wd2 = "committed_outputs/"
     output_dir = f"{wd}{wd2}aggregated_region_datafiles\\"
 
     # Input source of processed climate data by ssp/year/variable/region
@@ -72,10 +72,10 @@ if env == "pc":
 
     # Input IAMC scenarios file, must have a temperature variable
     #fname_input_scenarios = f"test_data/emissions_temp_AR6_small.xlsx"
-    with open("/home/marco/cmcc/committed/committed-get-data/data/latest.txt", 'r') as f:
+    with open("/home/marco/cmcc/committed/COMMITTED-main/data/latest.txt", 'r') as f:
         latest_filename = f.readlines()[0].rstrip()
     # fname_input_scenarios = f"test_data/true_input_scenarios.xlsx"
-    fname_input_scenarios = f"/home/marco/cmcc/committed/committed-get-data/data/committed_scenarios_{latest_filename}_clean.csv"
+    fname_input_scenarios = f"/home/marco/cmcc/committed/COMMITTED-main/data/postpro-inputs/committed_scenarios_{latest_filename}_clean.csv"
 
     # Directory of map files to read as input
     impact_data_dir = f"{wd}\\data\\4_split_files_for_geoserver"

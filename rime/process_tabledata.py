@@ -42,9 +42,9 @@ if __name__ == "__main__":
         raise Exception("No files!")
 
     # load input IAMC scenarios file
-    df_scens_in = pyam.IamDataFrame(fname_input_scenarios).filter(scenario="COMTD_SSP2_CP_DM")
+    df_scens_in = pyam.IamDataFrame(fname_input_scenarios)
 
-    mode = "CO2"
+    mode = "GWL"
     if mode == "CO2":
         print(
             "CO2 mode: Global mean temperatures will be derived from response \
