@@ -108,7 +108,8 @@ server <- function(input, output, session) {
     showNotification("Data folder not found. Please check the 'committed_outputs/' directory.", type = "error")
     rimedata <- NULL
   } else {
-    files <- setdiff(list.files(result_folder), "RIME-committed.csv")
+    files <- setdiff(list.files(result_folder), c("RIME-committed.csv", 
+                                                  "RIME_hazard_scores.parquet"))
     
     if (length(files) == 0) {
       showNotification("No data files found in the committed_outputs/ directory.", type = "error")
