@@ -11,20 +11,36 @@ if (figfmt=="pdf") {
   figdevice <- NULL
 }
 
+clean_scenario_names <- function(scores){
+  scores[scenario%in%c("COMTD_SSP2_CP_DM", "COMTD_SSP2_CurPol_D0"),
+          scenario:="COMTD_SSP2_CurPol"]
+
+  scores <- scores[scenario%in%c("COMTD_SSP2_2C_AP",
+                                "COMTD_SSP2_2C_ECPC",
+                                "COMTD_SSP2_2C_PC",
+                                "COMTD_SSP2_CurPol",
+                                "COMTD_SSP2_NDC_a03_LTS",
+                                "COMTD_SSP2_NDC_a1_LTS",
+                                "COMTD_SSP2_NDC_a3_LTS")]
+
+  scores$scenario <- str_remove(scores$scenario, "COMTD_SSP2_")
+
+  return(scores)
+}
+
+scenario_colors <- c(
+  "CurPol" = "#C71C2C",
+  "NDC" = "#7D7D7D",
+  "LTS" = "#E43E82",
+  "NDC_a03_LTS" = "#E45E22",
+  "NDC_a1_LTS" = "#E68E10",
+  "NDC_a3_LTS" = "#E8AF00",
+  "2C_PC" = "#006DCC",   
+  "2C_AP" = "#4DA6F5", 
+  "2C_ECPC" = "#94C2EB")
+
 scores <- setDT(read_parquet("committed_outputs/RIME_hazard_scores.parquet"))
-
-scores[scenario%in%c("COMTD_SSP2_CP_DM", "COMTD_SSP2_CurPol_D0"),
-         scenario:="COMTD_SSP2_CurPol"]
-
-scores <- scores[scenario%in%c("COMTD_SSP2_2C_AP",
-                               "COMTD_SSP2_2C_ECPC",
-                               "COMTD_SSP2_2C_PC",
-                               "COMTD_SSP2_CurPol",
-                               "COMTD_SSP2_NDC_a03_LTS",
-                               "COMTD_SSP2_NDC_a1_LTS",
-                               "COMTD_SSP2_NDC_a3_LTS")]
-
-scores$scenario <- str_remove(scores$scenario, "COMTD_SSP2_")
+scores <- clean_scenario_names(scores)
 
 sel_indicators <- c("Very heavy precipitation days",
                     "Water stress index",
@@ -78,7 +94,6 @@ ggplot(scores_selected) +
 ggsave(paste0("figures/selected_indicators.", figfmt),
         width=20, height=18, units="cm")
 
-
 # total score
 for (this_mod in unique(scores$model)){
   ggplot(scores[region=="India+ (R10)"&model==this_mod, 
@@ -91,6 +106,44 @@ for (this_mod in unique(scores$model)){
 }
 
 # breakdown of total score for a single scenario
-ggplot(scores[region=="India+ (R10)"&model=="WITCH 5.0"&scenario=="COMTD_SSP2_NDC_a3_LTS"]) + 
+ggplot(scores[region=="India+ (R10)"&model=="WITCH 5.0"&scenario=="NDC_a3_LTS"]) + 
   geom_area(aes(x=year, y=value, fill=indicator_name))
 ggsave(paste0("figures/breakdown.", figfmt))
+
+# details
+detailed_scores <- setDT(read_parquet("committed_outputs/RIME_detailed_scores.parquet"))
+detailed_scores <- clean_scenario_names(detailed_scores)
+detailed_scores <- detailed_scores[model!="REMIND 3.4"]
+
+ggplot(detailed_scores[region=="India+ (R10)"&
+                       indicator_name=="Cooling degree days (26C)"&
+                       variable=="Exposure|Population|High|%"]) + 
+  geom_line(aes(x=year, y=value, color=scenario, linetype=model)) +
+  theme_minimal() +
+  scale_color_manual(values = scenario_colors) +
+  labs(y="Exposure|Population|High|%")
+
+ggsave(paste0("figures/india-cdd.", figfmt),
+        width=17, height=9.5, units="cm")
+
+ggplot(detailed_scores[region=="China+ (R10)"&
+                       indicator_name=="Very heavy precipitation days"&
+                       variable=="Exposure|Land area|%"]) + 
+  geom_line(aes(x=year, y=value, color=scenario, linetype=model)) +
+  theme_minimal() +
+  scale_color_manual(values = scenario_colors) +
+  labs(y="Exposure|Land area|%")
+
+ggsave(paste0("figures/china-vhpd.", figfmt),
+        width=17, height=9.5, units="cm")
+
+ggplot(detailed_scores[region=="Rest of Asia (R10)"&
+                       indicator_name=="Water stress index"&
+                       variable=="Exposure|Land area|%"]) + 
+  geom_line(aes(x=year, y=value, color=scenario, linetype=model)) +
+  theme_minimal() +
+  scale_color_manual(values = scenario_colors) +
+  labs(y="Exposure|Land area|%")
+
+ggsave(paste0("figures/rasia-wsi.", figfmt),
+        width=17, height=9.5, units="cm")

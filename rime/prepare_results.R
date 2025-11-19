@@ -51,7 +51,8 @@ indicator_name_map <- data.table(
 )
 
 for (f in setdiff(list.files(result_folder), c("RIME-committed.csv", 
-                                               "RIME_hazard_scores.parquet"))){
+                                               "RIME_hazard_scores.parquet",
+                                               "RIME_detailed_scores.parquet"))){
   filename <- paste0(result_folder, f)
   cat(filename, "\n")
   if (exists("rimedata")){
@@ -99,8 +100,7 @@ indicator_sel <- data.table(
            "99_3",
            NA,
            NA
-        ),
-  variable = "Hazard|Hazard score|Population weighted"
+        )
 )
 
 region_name_map <- data.table(
@@ -128,11 +128,19 @@ region_name_map <- data.table(
                   )
 )
 
-selected_indicators <- merge(rimedata, indicator_sel, by=c("indicator_name", "spec", "variable"))
+selected_indicators <- merge(rimedata, indicator_sel, by=c("indicator_name", "spec"))
 selected_indicators[!is.na(spec), indicator_name:=paste(indicator_name, spec)]
 selected_indicators <- merge(selected_indicators, region_name_map, by="region")
 selected_indicators[, region:=NULL]
 setnames(selected_indicators, "r10_region", "region")
 
-write_parquet(selected_indicators, "committed_outputs/RIME_hazard_scores.parquet")
+detailed_indicators <- selected_indicators[
+  indicator_name%in%c("Cooling degree days (26C)",
+                      "Very heavy precipitation days",
+                      "Water stress index")]
+
+write_parquet(detailed_indicators, "committed_outputs/RIME_detailed_scores.parquet")
+
+write_parquet(selected_indicators[variable == "Hazard|Hazard score|Population weighted"], 
+  "committed_outputs/RIME_hazard_scores.parquet")
 
