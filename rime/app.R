@@ -10,6 +10,11 @@ library(plotly)
 library(stringr)
 library(stringi)
 
+# Instructions for deployment
+# rsconnect::deployApp('.', 
+#   appFiles=c('app.R', 'results-shiny-format.parquet'), 
+#   appName='COMMITTED-Climate-impacts-dashboard')
+
 # Define UI
 ui <- dashboardPage(
   dashboardHeader(title = "Climate Impacts Analysis Dashboard"),
@@ -57,9 +62,6 @@ ui <- dashboardPage(
 
 # Define Server
 server <- function(input, output, session) {
-  
-  result_folder <- "committed_outputs/"
-
   indicator_name_map <- data.table(
     indicator = c("cdd", 
                   "dri", 
@@ -84,7 +86,7 @@ server <- function(input, output, session) {
                       "Drought intensity",
                       "Drought intensity (Runoff)",
                       "Heatwave intensity",
-                      "Heat wave duration",
+                      NA,
                       "Inter-annual variability",
                       "Inter-annual variability (Runoff)",
                       "Heavy precipitation days",
@@ -102,58 +104,23 @@ server <- function(input, output, session) {
                       )
   )
 
-  # Load and process data once at startup
-  # Check if result folder exists
-  if (!dir.exists(result_folder)) {
-    showNotification("Data folder not found. Please check the 'committed_outputs/' directory.", type = "error")
-    rimedata <- NULL
-  } else {
-    files <- setdiff(list.files(result_folder), c("RIME-committed.csv", 
-                                                  "RIME_hazard_scores.parquet",
-                                                  "RIME_detailed_scores.parquet"))
-    
-    if (length(files) == 0) {
-      showNotification("No data files found in the committed_outputs/ directory.", type = "error")
-      rimedata <- NULL
-    } else {
-      # Load all files
-      for (f in files) {
-        filename <- paste0(result_folder, f)
-        cat(filename, "\n")
-        if (exists("rimedata")) {
-          rimedata <- rbind(rimedata, fread(filename, header = TRUE))
-        } else {
-          rimedata <- fread(filename, header = TRUE)
-        }
-      }
-      
-      # Reshape and process data
-      rimedata <- melt(rimedata, 
-                      id.vars = c("model", "scenario", "region", "variable", "unit"),
-                      variable.name = "year", 
-                      variable.factor = FALSE)
-      
-      rimedata[, variable := str_remove(variable, fixed("RIME|"))]
-      
-      # Split variable into indicator and variable components
-      rimedata[, c("indicator", "variable") := transpose(stri_split_fixed(variable, "|", n=2))]
-      
-      # Handle heatwave indicators with specifications
-      rimedata[str_detect(indicator, "hw"), c("indicator", "spec") := transpose(stri_split_fixed(indicator, "_", n=2))]
-      rimedata[str_detect(indicator, "hw"), c("perc", "days") := transpose(stri_split_fixed(spec, "_", n=2))]
-      rimedata[str_detect(indicator, "hw"), spec:=paste0(days, " days over ", perc, "p")]
-      rimedata[, days:=NULL]
-      rimedata[, perc:=NULL]
 
-      # Clean scenario names
-      rimedata[scenario %in% c("COMTD_SSP2_CP_DM", "COMTD_SSP2_CurPol_D0"), scenario := "COMTD_SSP2_CurPol"]
-      rimedata$scenario <- str_remove(rimedata$scenario, "COMTD_SSP2_")
+  rimedata <- setDT(read_parquet('results-shiny-format.parquet'))
 
-      # Select only relevant scenarios
-      scenarios <- c("NDC_a03_LTS", "NDC_a1_LTS", "NDC_a3_LTS", "2C_PC", "2C_AP", "2C_ECPC", "CurPol")
-      rimedata <- rimedata[scenario%in%scenarios]
-    }
-  }
+  # Handle heatwave indicators with specifications
+  rimedata[str_detect(indicator, "hw"), c("perc", "days") := transpose(stri_split_fixed(spec, "_", n=2))]
+  rimedata[str_detect(indicator, "hw"), spec:=paste0(days, " days over ", perc, "p")]
+  rimedata[, days:=NULL]
+  rimedata[, perc:=NULL]
+
+  # Clean scenario names
+  rimedata[scenario %in% c("COMTD_SSP2_CP_DM", "COMTD_SSP2_CurPol_D0"), scenario := "COMTD_SSP2_CurPol"]
+  rimedata$scenario <- str_remove(rimedata$scenario, "COMTD_SSP2_")
+
+  # Select only relevant scenarios
+  scenarios <- c("NDC_a03_LTS", "NDC_a1_LTS", "NDC_a3_LTS", "2C_PC", "2C_AP", "2C_ECPC", "CurPol")
+  rimedata <- rimedata[scenario%in%scenarios]
+
 
     # Define scenario colors
   scenario_colors <- c(
@@ -180,19 +147,19 @@ server <- function(input, output, session) {
     
     updateSelectInput(session, "indicator",
                       choices = setNames(indicator_choices$indicator, indicator_choices$indicator_name),
-                      selected = indicator_choices$indicator[1])
+                      selected = "hw")
 
     updateSelectInput(session, "region",
                       choices = unique(rimedata$region),
-                      selected = unique(rimedata$region)[1])
+                      selected = unique(rimedata$region)[2])
 
     updateCheckboxGroupInput(session, "scenario", 
                       choices = unique(rimedata$scenario),
-                      selected = unique(rimedata$scenario)[1:min(3, length(unique(rimedata$scenario)))])
+                      selected = unique(rimedata$scenario))
     
     updateCheckboxGroupInput(session, "model", 
                       choices = unique(rimedata$model),
-                      selected = unique(rimedata$model)[1:min(3, length(unique(rimedata$model)))])
+                      selected = unique(rimedata$model))
   })
   
   # Update available variables based on selected indicator
@@ -203,7 +170,7 @@ server <- function(input, output, session) {
     
     updateSelectInput(session, "variable",
                      choices = indicator_variables,
-                     selected = indicator_variables[1])
+                     selected = indicator_variables[9])
 
     indicator_specifications <- unique(rimedata[indicator == input$indicator & !is.na(spec)]$spec)
 

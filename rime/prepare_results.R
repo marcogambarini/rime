@@ -72,8 +72,6 @@ rimedata[str_detect(indicator, "hw"), c("indicator", "spec") := transpose(stri_s
 
 rimedata <- merge(rimedata, indicator_name_map)
 
-fwrite(rimedata, paste0(result_folder, "RIME-committed.csv"))
-
 # select values for a composite indicator
 # see Fig. SI 12 of Werning et al. 2024
 indicator_sel <- data.table(
@@ -129,10 +127,13 @@ region_name_map <- data.table(
 )
 
 selected_indicators <- merge(rimedata, indicator_sel, by=c("indicator_name", "spec"))
-selected_indicators[!is.na(spec), indicator_name:=paste(indicator_name, spec)]
 selected_indicators <- merge(selected_indicators, region_name_map, by="region")
 selected_indicators[, region:=NULL]
 setnames(selected_indicators, "r10_region", "region")
+
+write_parquet(selected_indicators, 'results-shiny-format.parquet')
+
+selected_indicators[!is.na(spec), indicator_name:=paste(indicator_name, spec)]
 
 detailed_indicators <- selected_indicators[
   indicator_name%in%c("Cooling degree days (26C)",
