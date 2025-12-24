@@ -32,15 +32,26 @@ scenario_colors <- c(
   "CurPol" = "#C71C2C",
   "NDC" = "#7D7D7D",
   "LTS" = "#E43E82",
-  "NDC_a03_LTS" = "#E45E22",
-  "NDC_a1_LTS" = "#E68E10",
-  "NDC_a3_LTS" = "#E8AF00",
+  "Convex" = "#E45E22",
+  "Linear" = "#E68E10",
+  "Concave" = "#E8AF00",
   "2C_PC" = "#006DCC",   
   "2C_AP" = "#4DA6F5", 
   "2C_ECPC" = "#94C2EB")
 
 scores <- setDT(read_parquet("committed_outputs/RIME_hazard_scores.parquet"))
 scores <- clean_scenario_names(scores)
+
+# Rename NDC->LTS scenarios for clarity
+scores[scenario=="NDC_a1_LTS", scenario:="Linear"]
+scores[scenario=="NDC_a03_LTS", scenario:="Convex"]
+scores[scenario=="NDC_a3_LTS", scenario:="Concave"]
+
+scenario_order <- c("2C_AP", "2C_ECPC", "2C_PC", 
+                    "CurPol",
+                    "Convex", "Linear", "Concave")
+
+scores[, scenario:=factor(scenario, levels=scenario_order)]
 
 sel_indicators <- c("Very heavy precipitation days",
                     "Water stress index",
