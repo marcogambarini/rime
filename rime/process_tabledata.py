@@ -24,6 +24,7 @@ if __name__ == "__main__":
     import dask
     import os 
 
+
     # from pandas import InvalidIndexError
     # dask.config.set(scheduler='threads')  # overwrite default with multiprocessing scheduler
 
@@ -108,7 +109,11 @@ if __name__ == "__main__":
                 dfp = df_scens_in.filter(variable=temp_variable)
             elif mode == "CO2":
                 dfp = prepare_cumulative(df_scens_in, years=years, use_dask=True)
-                ts = dfp.timeseries().apply(co2togwl_simple)
+
+                # Only the world CO2 value matters for global temperature computations
+                dfp_world = dfp.filter(region="World")
+
+                ts = dfp_world.timeseries().apply(co2togwl_simple)
                 ts = pyam.IamDataFrame(ts)
                 ts.rename(
                     {
@@ -117,10 +122,15 @@ if __name__ == "__main__":
                     },
                     inplace=True,
                 )
-                # Export data to check error and relationships
-                # ts.append(dfp).to_csv('c://users//byers//downloads//tcre_gwl_output.csv')
-                dfp = ts
+
+                # Get original regions and broadcast the result
+                original_regions = df_scens_in.region
+                dfp = pyam.concat([
+                    ts.rename({"region": {"World": r}}, inplace=False) 
+                    for r in original_regions
+                ])
                 dfp.meta = df_scens_in.meta.copy()
+
             dfp = dfp.filter(year=years)
 
             if few_scenarios:
