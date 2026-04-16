@@ -31,12 +31,6 @@ if __name__ == "__main__":
     filesall = glob.glob(fname_input_climate)
 
     files = filesall
-    # files = filesall[:2]
-    # files = filesall[2:6]
-    # files = filesall[7:9] # problem in 6?
-    # files = filesall[9:12]
-    # files = filesall[12:15]
-    # files = filesall[15:]
 
     if len(files) == 0:
         raise Exception("No files!")

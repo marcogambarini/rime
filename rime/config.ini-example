@@ -1,0 +1,9 @@
+[settings]
+output_region_agg = R10
+input_scenarios_name = AR6full
+temp_variable = Temperature|Magicc|Global Mean
+
+[folders]
+folder_input_climate = /home/marco/cmcc/committed/rime-data/aggregated_inputs/
+fname_input_scenarios = /home/marco/Documents/lavoro/enhanced-weathering/ocean-alk/runs/0303/results/summary/temperatures.csv
+folder_output = test_outputs/

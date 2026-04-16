@@ -13,22 +13,61 @@ from process_config import *
 # process_config.py
 # =============================================================================
 import os
+from configparser import RawConfigParser
+import argparse
+
+# Check if a configuration file has been provided as command-line argument
+parser = argparse.ArgumentParser(
+    description="Run the RIME emulator",
+    epilog="Use -c to specify the location of a configuration file",
+    formatter_class=argparse.RawDescriptionHelpFormatter
+)
+parser.add_argument("-c", action="store_true",
+                    help="Set a configuration file")
+parser.add_argument("conffile", nargs=1,
+                    help="Path to the configuration file")
+args = parser.parse_args()
+
+print(args.conffile[0])
+
+# Read configuration file, if provided
+if args.conffile:
+    conf = RawConfigParser()
+    conf.read(args.conffile[0])
+
+def read_setting(sect_name, var_name, default_val):
+    if (args.c and conf.has_section(sect_name)):
+        return conf[sect_name].get(var_name)
+    else:
+        return default_val
+
+# Regional aggregation of outputs ('R10' or 'COUNTRIES')
+region = read_setting("settings", "output_region_agg", "R10")
+# Base name for output files 
+input_scenarios_name = read_setting("settings", "input_scenarios_name", "testrun")
+# Temperature variable to look for in the input files
+temp_variable = read_setting("settings", "temp_variable",
+    "AR6 climate diagnostics|Surface Temperature (GSAT)|MAGICCv7.5.3|50.0th Percentile"
+)
+# Input source of processed climate data by ssp/year/variable/reg
+folder_input_climate = read_setting("folders", "folder_input_climate",
+    "/home/marco/cmcc/committed/rime-data/aggregated_inputs/"
+)
+# Input IAMC scenarios file, must have a temperature variable called temp_variable
+fname_input_scenarios = read_setting("folders", "fname_input_scenarios",
+    f"test_data/true_input_scenarios.xlsx"
+)
+# Output directory
+wd2 = read_setting("folders", "folder_output", "test_outputs/")
+
 
 # Run and environment settings
 user = "byers"
 env = "pc"
-# env = 'server'
-# env = 'ebro3'
 
 # git_path = f"C:\\users\\{user}\\Github\\"
 git_path = f"C:\\Github\\"
 
-
-# From generate_aggregated_inputs.py
-
-#region = "COUNTRIES"  # 'R10' or 'COUNTRIES'
-region = "R5"
-# region = "R10"
 table_output_format = f"table_output_|_{region}.csv"
 
 
@@ -61,18 +100,9 @@ if env == "pc":
     # Directory of table files to read as input
     wdtable_input = "table_output\\"
 
-    # Output directory
-    wd2 = "reprod_outputs/"
-    output_dir = f"{wd}{wd2}aggregated_region_datafiles\\"
+    output_dir = f"{wd2}aggregated_region_datafiles\\"
 
-    # Input source of processed climate data by ssp/year/variable/region
-    #folder_input_climate = "aggregated_region_datafiles\\"
-    folder_input_climate = "/home/marco/cmcc/committed/rime-data/aggregated_inputs/"
     fname_input_climate = f"{folder_input_climate}*_{region}*.nc"
-
-    # Input IAMC scenarios file, must have a temperature variable
-    #fname_input_scenarios = f"test_data/emissions_temp_AR6_small.xlsx"
-    fname_input_scenarios = f"test_data/true_input_scenarios.xlsx"
 
     # Directory of map files to read as input
     impact_data_dir = f"{wd}\\data\\4_split_files_for_geoserver"
@@ -84,16 +114,12 @@ if env == "pc":
 # =============================================================================
 
 year_resols = [5]
-input_scenarios_name = "AR6full"
 
-temp_variable = (
-    "AR6 climate diagnostics|Surface Temperature (GSAT)|MAGICCv7.5.3|50.0th Percentile"
-)
 ssp_meta_col = "Ssp_family"  # meta column name of SSP assignment
 
 
-output_folder_tables = f"{wd}{wd2}output/tables/"
-output_folder_maps = f"{wd}{wd2}output/maps/"
+output_folder_tables = f"{wd2}"
+output_folder_maps = f"{wd2}"
 
 prefix_indicator = "Climate impacts|RIME|"
 
