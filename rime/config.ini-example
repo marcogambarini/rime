@@ -1,6 +1,7 @@
 [settings]
 output_region_agg = R10
 input_scenarios_name = AR6full
+mode = GWL
 temp_variable = Temperature|Magicc|Global Mean
 
 [folders]

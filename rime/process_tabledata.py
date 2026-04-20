@@ -38,15 +38,6 @@ if __name__ == "__main__":
     # load input IAMC scenarios file
     df_scens_in = pyam.IamDataFrame(fname_input_scenarios)
 
-    mode = "GWL"
-    if mode == "CO2":
-        print(
-            "CO2 mode: Global mean temperatures will be derived from response \
-              to cumulative CO2 emissions."
-        )
-    elif mode == "GWL":
-        print("GWL mode: Global mean temperatures provided as input.")
-
     if parallel:
         dask.config.set(
             scheduler="processes"
@@ -105,7 +96,7 @@ if __name__ == "__main__":
                 dfp = prepare_cumulative(df_scens_in, years=years, use_dask=True)
 
                 # Only the world CO2 value matters for global temperature computations
-                dfp_world = dfp.filter(region="World")
+                dfp_world = dfp.filter(region="World|world", regexp=True)
 
                 ts = dfp_world.timeseries().apply(co2togwl_simple)
                 ts = pyam.IamDataFrame(ts)
@@ -117,12 +108,7 @@ if __name__ == "__main__":
                     inplace=True,
                 )
 
-                # Get original regions and broadcast the result
-                original_regions = df_scens_in.region
-                dfp = pyam.concat([
-                    ts.rename({"region": {"World": r}}, inplace=False) 
-                    for r in original_regions
-                ])
+                dfp = ts
                 dfp.meta = df_scens_in.meta.copy()
 
             dfp = dfp.filter(year=years)

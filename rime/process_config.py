@@ -45,10 +45,19 @@ def read_setting(sect_name, var_name, default_val):
 region = read_setting("settings", "output_region_agg", "R10")
 # Base name for output files 
 input_scenarios_name = read_setting("settings", "input_scenarios_name", "testrun")
-# Temperature variable to look for in the input files
-temp_variable = read_setting("settings", "temp_variable",
-    "AR6 climate diagnostics|Surface Temperature (GSAT)|MAGICCv7.5.3|50.0th Percentile"
-)
+# Input variable to be used
+mode = read_setting("settings", "mode", "GWL")
+if mode == "CO2":
+    print(
+        "CO2 mode: Global mean temperatures will be derived from response \n \
+        to cumulative CO2 emissions. World Emissions|CO2 need to be included in the input."
+    )
+elif mode == "GWL":
+    print("GWL mode: Global mean temperatures provided as input.")
+    # Temperature variable to look for in the input files
+    temp_variable = read_setting("settings", "temp_variable",
+        "AR6 climate diagnostics|Surface Temperature (GSAT)|MAGICCv7.5.3|50.0th Percentile"
+    )
 # Input source of processed climate data by ssp/year/variable/reg
 folder_input_climate = read_setting("folders", "folder_input_climate",
     "/home/marco/cmcc/committed/rime-data/aggregated_inputs/"
